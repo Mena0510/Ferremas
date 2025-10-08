@@ -56,5 +56,8 @@ identidad: (OTHE) 123456789
    Nombre: Pedro Contador
    Tipo: contador
 
+   Cristest@admin.cl
+   Cristest1
 
 cliente@test.cl
+
