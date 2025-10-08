@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Resumen del Pedido</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.producto.nombre }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                    <td>${{ item.producto.precio|floatformat:0 }}</td>
+                                    <td>${{ item.subtotal|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">Total:</th>
+                                    <th>${{ total|floatformat:0 }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Información de Entrega</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Tipo de Entrega -->
+                        <div class="mb-3">
+                            <label for="tipo_entrega" class="form-label">Tipo de Entrega</label>
+                            <select class="form-select" id="tipo_entrega" name="tipo_entrega" required>
+                                <option value="tienda">Retiro en Tienda</option>
+                                <option value="domicilio">Despacho a Domicilio</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Dirección de Entrega (solo para domicilio) -->
+                        <div class="mb-3" id="direccion_entrega_div" style="display: none;">
+                            <label for="direccion_entrega" class="form-label">Dirección de Entrega</label>
+                            <textarea class="form-control" id="direccion_entrega" name="direccion_entrega" rows="3" placeholder="Ingresa tu dirección completa"></textarea>
+                        </div>
+                        
+                        <!-- Teléfono de Contacto -->
+                        <div class="mb-3">
+                            <label for="telefono_contacto" class="form-label">Teléfono de Contacto</label>
+                            <input type="tel" class="form-control" id="telefono_contacto" name="telefono_contacto" placeholder="+56 9 1234 5678" required>
+                        </div>
+                        
+                        <!-- Método de Pago -->
+                        <div class="mb-3">
+                            <label for="metodo_pago" class="form-label">Método de Pago</label>
+                            <select class="form-select" id="metodo_pago" name="metodo_pago" required>
+                                <option value="debito">Débito</option>
+                                <option value="credito">Crédito</option>
+                                <option value="transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Información del Cliente -->
+                        <div class="mb-3">
+                            <h6>Información del Cliente</h6>
+                            <p><strong>Nombre:</strong> {{ nombre }}</p>
+                            <p><strong>Email:</strong> {{ email }}</p>
+                            <p><strong>Dirección:</strong> {{ direccion }}</p>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-credit-card"></i> Proceder al Pago
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('tipo_entrega').addEventListener('change', function() {
+    const direccionDiv = document.getElementById('direccion_entrega_div');
+    const direccionInput = document.getElementById('direccion_entrega');
+    
+    if (this.value === 'domicilio') {
+        direccionDiv.style.display = 'block';
+        direccionInput.required = true;
+    } else {
+        direccionDiv.style.display = 'none';
+        direccionInput.required = false;
+    }
+});
+
+document.getElementById('metodo_pago').addEventListener('change', function() {
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    if (this.value === 'transferencia') {
+        submitBtn.innerHTML = '<i class="bi bi-upload"></i> Crear Pedido con Transferencia';
+    } else {
+        submitBtn.innerHTML = '<i class="bi bi-credit-card"></i> Proceder al Pago';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4 text-center">
+          <!-- Ícono de éxito -->
+          <div class="mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#28a745" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+              <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.97 11.03a.75.75 0 0 0 1.07-.02L10.97 8.1a.75.75 0 1 0-1.06-1.06L7.5 9.94 6.03 8.47a.75.75 0 1 0-1.06 1.06l1.995 1.995z"/>
+            </svg>
+          </div>
+
+          <h2 class="card-title text-success mb-2">¡Pago realizado con éxito!</h2>
+          <p class="text-muted mb-4">Gracias por tu compra. </p>
+          <a href="{% url 'catalogo_productos' %}" class="btn btn-success btn-lg">
+            Volver al Catálogo
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

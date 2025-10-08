@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Vendedor{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-person-badge"></i> Dashboard Vendedor</h2>
+                <div class="text-end">
+                    <p class="mb-0"><strong>Bienvenido:</strong> {{ perfil.nombre_completo }}</p>
+                    <small class="text-muted">{{ perfil.tipo_usuario|title }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos Pagados Pendientes de Aprobación -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-clock"></i> Pedidos Pagados Pendientes de Aprobación</h5>
+                </div>
+                <div class="card-body">
+                    {% if pedidos_pendientes %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Método Pago</th>
+                                    <th>Tipo Entrega</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos_pendientes %}
+                                <tr>
+                                    <td><strong>#{{ pedido.id }}</strong></td>
+                                    <td>{{ pedido.cliente.username }}</td>
+                                    <td>
+                                        {% for item in pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>${{ pedido.total|floatformat:0 }}</td>
+                                    <td>
+                                        {% if pedido.metodo_pago == 'transferencia' %}
+                                            <span class="badge bg-info">{{ pedido.get_metodo_pago_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ pedido.get_metodo_pago_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pedido.get_tipo_entrega_display }}</td>
+                                    <td>{{ pedido.fecha|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#aprobarModal{{ pedido.id }}">
+                                            <i class="bi bi-check-circle"></i> Aprobar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rechazarModal{{ pedido.id }}">
+                                            <i class="bi bi-x-circle"></i> Rechazar
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No hay pedidos pagados pendientes de aprobación</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos Aprobados - Órdenes de Bodega Creadas -->
+    {% if pedidos_con_orden %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Pedidos Aprobados - Órdenes de Bodega Creadas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Estado Orden</th>
+                                    <th>Bodeguero</th>
+                                    <th>Fecha Creación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos_con_orden %}
+                                <tr>
+                                    <td><strong>#{{ pedido.id }}</strong></td>
+                                    <td>{{ pedido.cliente.username }}</td>
+                                    <td>
+                                        {% for item in pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>${{ pedido.total|floatformat:0 }}</td>
+                                    <td>
+                                        {% if pedido.orden_bodega.estado == 'pendiente' %}
+                                            <span class="badge bg-warning text-dark">Pendiente</span>
+                                        {% elif pedido.orden_bodega.estado == 'aceptada' %}
+                                            <span class="badge bg-info">Aceptada</span>
+                                        {% elif pedido.orden_bodega.estado == 'preparando' %}
+                                            <span class="badge bg-warning text-dark">Preparando</span>
+                                        {% elif pedido.orden_bodega.estado == 'completada' %}
+                                            <span class="badge bg-success">Completada</span>
+                                        {% elif pedido.orden_bodega.estado == 'entregada' %}
+                                            <span class="badge bg-secondary">Entregada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if pedido.orden_bodega.bodeguero %}
+                                            {{ pedido.orden_bodega.bodeguero.username }}
+                                        {% else %}
+                                            <span class="text-muted">Sin asignar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pedido.orden_bodega.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pedidos Listos para Despacho (Retiro en Tienda) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-shop"></i> Pedidos Listos para Despacho (Retiro en Tienda)</h5>
+                </div>
+                <div class="card-body">
+                    {% if pedidos_listos_despacho %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Teléfono Contacto</th>
+                                    <th>Fecha Preparación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos_listos_despacho %}
+                                <tr>
+                                    <td><strong>#{{ pedido.id }}</strong></td>
+                                    <td>{{ pedido.cliente.username }}</td>
+                                    <td>
+                                        {% for item in pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>${{ pedido.total|floatformat:0 }}</td>
+                                    <td>{{ pedido.telefono_contacto }}</td>
+                                    <td>{{ pedido.orden_bodega.fecha_completado|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#despacharModal{{ pedido.id }}">
+                                            <i class="bi bi-check-circle"></i> Registrar Despacho
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No hay pedidos listos para despacho</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos Despachados Recientemente -->
+    {% if pedidos_despachados %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle"></i> Pedidos Despachados Recientemente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Fecha Despacho</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos_despachados %}
+                                <tr>
+                                    <td><strong>#{{ pedido.id }}</strong></td>
+                                    <td>{{ pedido.cliente.username }}</td>
+                                    <td>
+                                        {% for item in pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>${{ pedido.total|floatformat:0 }}</td>
+                                    <td>{{ pedido.fecha_entrega|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Despachado</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modales para Aprobar/Rechazar Pedidos -->
+{% for pedido in pedidos_pendientes %}
+<!-- Modal Aprobar -->
+<div class="modal fade" id="aprobarModal{{ pedido.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Aprobar Pedido #{{ pedido.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'aprobar_rechazar_pedido' pedido.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="aprobar">
+                <div class="modal-body">
+                    <p>¿Estás seguro de que quieres aprobar el pedido #{{ pedido.id }}?</p>
+                    <div class="mb-3">
+                        <label for="observaciones" class="form-label">Observaciones (opcional)</label>
+                        <textarea class="form-control" name="observaciones" rows="3" placeholder="Observaciones sobre la aprobación..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Aprobar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rechazar -->
+<div class="modal fade" id="rechazarModal{{ pedido.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Rechazar Pedido #{{ pedido.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'aprobar_rechazar_pedido' pedido.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="rechazar">
+                <div class="modal-body">
+                    <p>¿Estás seguro de que quieres rechazar el pedido #{{ pedido.id }}?</p>
+                    <div class="mb-3">
+                        <label for="observaciones" class="form-label">Motivo del rechazo</label>
+                        <textarea class="form-control" name="observaciones" rows="3" placeholder="Motivo del rechazo..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Rechazar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modales para Registrar Despacho -->
+{% for pedido in pedidos_listos_despacho %}
+<div class="modal fade" id="despacharModal{{ pedido.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Registrar Despacho - Pedido #{{ pedido.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'registrar_despacho' pedido.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6>Confirmar Despacho</h6>
+                        <p><strong>Cliente:</strong> {{ pedido.cliente.username }}</p>
+                        <p><strong>Teléfono:</strong> {{ pedido.telefono_contacto }}</p>
+                        <p><strong>Productos:</strong></p>
+                        <ul>
+                            {% for item in pedido.items.all %}
+                            <li>{{ item.cantidad }}x {{ item.producto.nombre }}</li>
+                            {% endfor %}
+                        </ul>
+                        <p><strong>Total:</strong> ${{ pedido.total|floatformat:0 }}</p>
+                    </div>
+                    <p>¿Confirmas que el cliente ha retirado el pedido en tienda?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Confirmar Despacho
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %} 

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Panel de Administración</h2>
+
+  <!-- Botón para crear nuevo producto -->
+  <div class="mb-3 text-end">
+    <a href="{% url 'crear_producto' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Crear nuevo producto
+    </a>
+  </div>
+
+  <!-- Tabla de productos -->
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Precio</th>
+          <th>Stock</th>
+          <th style="min-width: 160px;">Acciones</th>  {# Ancho mínimo para que quepan los botones #}
+        </tr>
+      </thead>
+      <tbody>
+        {% for producto in productos %}
+        <tr>
+          <td>{{ producto.id }}</td>
+          <td>{{ producto.nombre }}</td>
+          <td>${{ producto.precio }}</td>
+          <td>{{ producto.stock }}</td>
+          <td>
+            <a href="{% url 'editar_producto' producto.id %}" class="btn btn-sm btn-warning me-2">
+              <i class="bi bi-pencil-square"></i> Editar
+            </a>
+            <a href="{% url 'eliminar_producto' producto.id %}" class="btn btn-sm btn-danger" 
+               onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+              <i class="bi bi-trash"></i> Eliminar
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center">No hay productos disponibles.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

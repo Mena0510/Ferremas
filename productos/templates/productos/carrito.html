@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Carrito de Compras</h2>
+    {% if items %}
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.producto.nombre }}</td>
+                <td>
+                    <form method="post" action="{% url 'actualizar_carrito' item.producto.id %}" class="d-flex align-items-center">
+                        {% csrf_token %}
+                        <input type="number" name="cantidad" min="1" max="{{ item.producto.stock }}"
+                               value="{{ item.cantidad }}" class="form-control me-2" style="width: 80px;">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Actualizar</button>
+                    </form>
+                </td>
+                <td>${{ item.subtotal }}</td>
+                <td>
+                    <form method="post" action="{% url 'eliminar_del_carrito' item.producto.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+    <div class="text-end">
+        <h4>Total: ${{ total }}</h4>
+        <a href="{% url 'checkout' %}" class="btn btn-success">Ir a pagar</a>
+    </div>
+    {% else %}
+    <p>No hay productos en el carrito.</p>
+    {% endif %}
+</div>
+{% endblock %}

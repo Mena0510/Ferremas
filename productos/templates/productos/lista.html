@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Importaciones Futuras</h1>
+    <div class="row">
+        {% for producto in productos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ producto.nombre }}</h5>
+                    <p class="card-text">
+                        <strong>Marca:</strong> {{ producto.marca }}<br>
+                        <strong>Código:</strong> {{ producto.codigo }}<br>
+                        <strong>Categoría:</strong> {{ producto.categoria|title }}<br>
+                        <strong class="text-success">Stock Aproximado:</strong> {{ producto.stock }} unidades
+                    </p>
+                    {% if producto.precio %}
+                    <div class="mt-auto">
+                        <h6>Historial de Precios:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for precio in producto.precio %}
+                            <li class="list-group-item">
+                                {{ precio.fecha|slice:":10" }}: ${{ precio.valor }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+{% endblock %}

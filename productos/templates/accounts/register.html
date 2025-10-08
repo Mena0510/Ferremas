@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Registro{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="text-center mb-4">Crear Cuenta</h3>
+        {% if error %}
+          <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre completo</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Correo electrónico</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="direccion" class="form-label">Dirección</label>
+            <input type="text" class="form-control" id="direccion" name="direccion" required>
+          </div>
+          <div class="mb-3">
+            <label for="tipo_usuario" class="form-label">Tipo de Usuario</label>
+            <select class="form-control" id="tipo_usuario" name="tipo_usuario" required>
+              <option value="cliente">Cliente</option>
+              <option value="vendedor">Vendedor</option>
+              <option value="bodeguero">Bodeguero</option>
+              <option value="contador">Contador</option>
+            </select>
+            <small class="form-text text-muted">
+              Selecciona el tipo de usuario que mejor describe tu rol en la plataforma.
+            </small>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+          <div class="mb-3">
+            <label for="password2" class="form-label">Confirmar contraseña</label>
+            <input type="password" class="form-control" id="password2" name="password2" required>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">Registrarse</button>
+          </div>
+        </form>
+        <p class="text-center mt-3">
+          ¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

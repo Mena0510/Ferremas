@@ -1,0 +1,70 @@
+# .gitignore para proyecto Django
+# Creado con Python y Django en mente
+
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Base de datos SQLite local
+*.sqlite3
+*.db
+*.db-journal
+
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos de PyCharm/VS Code
+.idea/
+.vscode/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de caché y logs
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+
+# Directorios de medios y estáticos
+/media/
+/staticfiles/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de instalación de paquetes
+pip-delete-this-directory.txt
+pip-selfcheck.json
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Entornos de desarrollo
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos de configuración local
+settings/local.py
+
+# Archivos de despliegue
+*.tar.gz
+*.whl

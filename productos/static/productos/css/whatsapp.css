@@ -1,0 +1,14 @@
+/* productos/static/productos/css/whatsapp.css */
+.whatsapp-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  z-index: 9999;
+  cursor: pointer;
+}
+.whatsapp-button img {
+  width: 100%;
+  height: auto;
+}

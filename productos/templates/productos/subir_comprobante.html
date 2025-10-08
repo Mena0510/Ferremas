@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Subir Comprobante de Transferencia{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-upload"></i>
+                        Subir Comprobante de Transferencia
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5>Detalles del Pedido #{{ pedido.id }}</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in pedido.items.all %}
+                                        <tr>
+                                            <td>{{ item.producto.nombre }}</td>
+                                            <td>{{ item.cantidad }}</td>
+                                            <td>${{ item.precio_unitario|floatformat:0 }}</td>
+                                            <td>${{ item.subtotal|floatformat:0 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Total:</th>
+                                            <th>${{ pedido.total|floatformat:0 }}</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Información de Entrega</h6>
+                            <p><strong>Tipo:</strong> {{ pedido.get_tipo_entrega_display }}</p>
+                            {% if pedido.direccion_entrega %}
+                            <p><strong>Dirección:</strong> {{ pedido.direccion_entrega }}</p>
+                            {% endif %}
+                            <p><strong>Teléfono:</strong> {{ pedido.telefono_contacto }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Información de Pago</h6>
+                            <p><strong>Método:</strong> {{ pedido.get_metodo_pago_display }}</p>
+                            <p><strong>Estado:</strong> 
+                                <span class="badge bg-warning text-dark">{{ pedido.get_estado_display }}</span>
+                            </p>
+                            <p><strong>Fecha:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> Instrucciones para el Pago</h6>
+                        <p class="mb-2">Para completar tu pedido, realiza una transferencia bancaria con los siguientes datos:</p>
+                        <ul class="mb-2">
+                            <li><strong>Banco:</strong> Banco de Chile</li>
+                            <li><strong>Tipo de Cuenta:</strong> Cuenta Corriente</li>
+                            <li><strong>Número de Cuenta:</strong> 12345678</li>
+                            <li><strong>Titular:</strong> FERREMAS SPA</li>
+                            <li><strong>RUT:</strong> 76.123.456-7</li>
+                            <li><strong>Monto:</strong> ${{ pedido.total|floatformat:0 }}</li>
+                            <li><strong>Asunto:</strong> Pedido #{{ pedido.id }}</li>
+                        </ul>
+                        <p class="mb-0"><strong>Importante:</strong> Una vez realizada la transferencia, sube el comprobante para que el contador pueda confirmar el pago.</p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="comprobante" class="form-label">Comprobante de Transferencia</label>
+                            <input type="file" class="form-control" id="comprobante" name="comprobante" accept="image/*,.pdf" required>
+                            <div class="form-text">Acepta archivos de imagen (JPG, PNG) o PDF. Máximo 5MB.</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-upload"></i> Subir Comprobante
+                            </button>
+                            <a href="{% url 'client_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver a Mi Cuenta
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

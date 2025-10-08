@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Producto - Bodeguero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        {% if producto.imagen %}
+                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="max-width: 200px; max-height: 200px; object-fit: cover;" class="rounded border mb-3">
+                        {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 200px; height: 200px;">
+                            <i class="bi bi-image text-muted display-4"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <h5 class="text-danger">{{ producto.nombre }}</h5>
+                        <p class="text-muted mb-0">
+                            <strong>Categoría:</strong> {{ producto.categoria }}<br>
+                            <strong>Precio:</strong> ${{ producto.precio|floatformat:0 }}<br>
+                            <strong>Stock:</strong> {{ producto.stock }} unidades
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>¡Atención!</strong> Esta acción no se puede deshacer. 
+                        El producto será eliminado permanentemente del catálogo.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a href="{% url 'bodeguero_catalogo' %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Eliminar Producto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .alert {
+        border-radius: 0.375rem;
+    }
+    
+    .btn {
+        border-radius: 0.375rem;
+    }
+</style>
+{% endblock %} 

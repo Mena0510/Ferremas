@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Bodeguero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-box-seam"></i> Dashboard Bodeguero</h2>
+                <div class="text-end">
+                    <p class="mb-0"><strong>Bienvenido:</strong> {{ perfil.nombre_completo }}</p>
+                    <small class="text-muted">{{ perfil.tipo_usuario|title }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'bodeguero_catalogo' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-box-seam"></i><br>
+                                <strong>Gestionar Catálogo</strong><br>
+                                <small>Crear, editar y eliminar productos</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="#ordenes-pendientes" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-list-check"></i><br>
+                                <strong>Órdenes Pendientes</strong><br>
+                                <small>Ver órdenes por procesar</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="#pedidos-preparando" class="btn btn-outline-info w-100">
+                                <i class="bi bi-gear"></i><br>
+                                <strong>En Preparación</strong><br>
+                                <small>Pedidos siendo preparados</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="#pedidos-listos" class="btn btn-outline-success w-100">
+                                <i class="bi bi-check-circle"></i><br>
+                                <strong>Listos para Entrega</strong><br>
+                                <small>Pedidos completados</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Órdenes Asignadas al Bodeguero -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-list-task"></i> Mis Órdenes de Bodega</h5>
+                </div>
+                <div class="card-body">
+                    {% if ordenes_asignadas %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Orden</th>
+                                    <th># Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Asignación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for orden in ordenes_asignadas %}
+                                <tr>
+                                    <td><strong>#{{ orden.id }}</strong></td>
+                                    <td><strong>#{{ orden.pedido.id }}</strong></td>
+                                    <td>{{ orden.pedido.cliente.username }}</td>
+                                    <td>
+                                        {% for item in orden.pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% if orden.estado == 'aceptada' %}
+                                            <span class="badge bg-info">Aceptada</span>
+                                        {% elif orden.estado == 'preparando' %}
+                                            <span class="badge bg-warning text-dark">Preparando</span>
+                                        {% elif orden.estado == 'completada' %}
+                                            <span class="badge bg-success">Completada</span>
+                                        {% elif orden.estado == 'entregada' %}
+                                            <span class="badge bg-secondary">Entregada al Vendedor</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ orden.fecha_aceptacion|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if orden.estado == 'aceptada' %}
+                                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#prepararModal{{ orden.id }}">
+                                                <i class="bi bi-box-seam"></i> Preparar Pedido
+                                            </button>
+                                        {% elif orden.estado == 'completada' %}
+                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#entregarModal{{ orden.id }}">
+                                                <i class="bi bi-truck"></i> Entregar al Vendedor
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No tienes órdenes asignadas actualmente</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Órdenes Pendientes (Disponibles para Aceptar) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-clock"></i> Órdenes Pendientes Disponibles</h5>
+                </div>
+                <div class="card-body">
+                    {% if ordenes_pendientes %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Orden</th>
+                                    <th># Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for orden in ordenes_pendientes %}
+                                <tr>
+                                    <td><strong>#{{ orden.id }}</strong></td>
+                                    <td><strong>#{{ orden.pedido.id }}</strong></td>
+                                    <td>{{ orden.pedido.cliente.username }}</td>
+                                    <td>
+                                        {% for item in orden.pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>${{ orden.pedido.total|floatformat:0 }}</td>
+                                    <td>{{ orden.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#aceptarModal{{ orden.id }}">
+                                            <i class="bi bi-check-circle"></i> Aceptar Orden
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No hay órdenes pendientes disponibles</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Órdenes Completadas Recientemente -->
+    {% if ordenes_completadas %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle"></i> Órdenes Completadas Recientemente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Orden</th>
+                                    <th># Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Fecha Entrega</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for orden in ordenes_completadas %}
+                                <tr>
+                                    <td><strong>#{{ orden.id }}</strong></td>
+                                    <td><strong>#{{ orden.pedido.id }}</strong></td>
+                                    <td>{{ orden.pedido.cliente.username }}</td>
+                                    <td>
+                                        {% for item in orden.pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ orden.fecha_entrega_vendedor|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Entregada al Vendedor</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Resumen de Actividad -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Órdenes Asignadas</h5>
+                            <h2 class="mb-0">{{ ordenes_asignadas.count }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-list-task fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Órdenes Pendientes</h5>
+                            <h2 class="mb-0">{{ ordenes_pendientes.count }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-clock fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Órdenes Completadas</h5>
+                            <h2 class="mb-0">{{ ordenes_asignadas|length }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para Aceptar Órdenes -->
+{% for orden in ordenes_pendientes %}
+<div class="modal fade" id="aceptarModal{{ orden.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Aceptar Orden de Bodega #{{ orden.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'aceptar_orden_bodega' orden.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>¿Estás seguro de que quieres aceptar la orden de bodega #{{ orden.id }}?</p>
+                    <div class="alert alert-info">
+                        <h6>Detalles del Pedido #{{ orden.pedido.id }}</h6>
+                        <p><strong>Cliente:</strong> {{ orden.pedido.cliente.username }}</p>
+                        <p><strong>Total:</strong> ${{ orden.pedido.total|floatformat:0 }}</p>
+                        <p><strong>Productos:</strong></p>
+                        <ul>
+                            {% for item in orden.pedido.items.all %}
+                            <li>{{ item.cantidad }}x {{ item.producto.nombre }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Aceptar Orden</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modales para Preparar Pedidos -->
+{% for orden in ordenes_asignadas %}
+{% if orden.estado == 'aceptada' %}
+<div class="modal fade" id="prepararModal{{ orden.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Preparar Pedido #{{ orden.pedido.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'preparar_pedido' orden.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>¿Has preparado todos los productos del pedido #{{ orden.pedido.id }}?</p>
+                    <div class="alert alert-warning">
+                        <h6>Productos a preparar:</h6>
+                        <ul>
+                            {% for item in orden.pedido.items.all %}
+                            <li>{{ item.cantidad }}x {{ item.producto.nombre }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Marcar como Preparado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<!-- Modales para Entregar al Vendedor -->
+{% for orden in ordenes_asignadas %}
+{% if orden.estado == 'completada' %}
+<div class="modal fade" id="entregarModal{{ orden.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Entregar Pedido al Vendedor - #{{ orden.pedido.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'entregar_a_vendedor' orden.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Selecciona el vendedor al que entregarás el pedido #{{ orden.pedido.id }}:</p>
+                    <div class="mb-3">
+                        <label for="vendedor" class="form-label">Vendedor</label>
+                        <select class="form-select" name="vendedor" required>
+                            <option value="">Selecciona un vendedor...</option>
+                            <!-- Aquí se deberían cargar los vendedores disponibles -->
+                            <option value="1">Vendedor 1</option>
+                            <option value="2">Vendedor 2</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-success">
+                        <h6>Pedido listo para entrega:</h6>
+                        <p><strong>Cliente:</strong> {{ orden.pedido.cliente.username }}</p>
+                        <p><strong>Total:</strong> ${{ orden.pedido.total|floatformat:0 }}</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Entregar al Vendedor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %} 

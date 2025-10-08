@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Cuenta - Cliente{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-person-circle"></i> Mi Cuenta</h2>
+                <div class="text-end">
+                    <p class="mb-0"><strong>Bienvenido:</strong> {{ perfil.nombre_completo }}</p>
+                    <small class="text-muted">{{ perfil.tipo_usuario|title }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información Personal -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Información Personal</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Nombre:</strong> {{ perfil.nombre_completo }}</p>
+                    <p><strong>Email:</strong> {{ perfil.user.email }}</p>
+                    <p><strong>Dirección:</strong> {{ perfil.direccion }}</p>
+                    <p><strong>Teléfono:</strong> {{ perfil.telefono }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-cart"></i> Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'catalogo_productos' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> Ver Catálogo de Productos
+                        </a>
+                        <a href="{% url 'ver_carrito' %}" class="btn btn-outline-success">
+                            <i class="bi bi-cart3"></i> Ver Mi Carrito
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-outline-info">
+                            <i class="bi bi-house"></i> Ir al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Compras -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Mi Historial de Compras</h5>
+                </div>
+                <div class="card-body">
+                    {% if historial_compras %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th># Pedido</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Método Pago</th>
+                                    <th>Tipo Entrega</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in historial_compras %}
+                                <tr>
+                                    <td><strong>#{{ pedido.id }}</strong></td>
+                                    <td>
+                                        {% for item in pedido.items.all %}
+                                            {{ item.cantidad }}x {{ item.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>${{ pedido.total|floatformat:0 }}</td>
+                                    <td>
+                                        {% if pedido.metodo_pago == 'transferencia' %}
+                                            <span class="badge bg-info">{{ pedido.get_metodo_pago_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ pedido.get_metodo_pago_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pedido.get_tipo_entrega_display }}</td>
+                                    <td>
+                                        {% if pedido.estado == 'pendiente' %}
+                                            <span class="badge bg-warning text-dark">{{ pedido.get_estado_display }}</span>
+                                        {% elif pedido.estado == 'aprobado' %}
+                                            <span class="badge bg-info">{{ pedido.get_estado_display }}</span>
+                                        {% elif pedido.estado == 'preparando' %}
+                                            <span class="badge bg-primary">{{ pedido.get_estado_display }}</span>
+                                        {% elif pedido.estado == 'listo_entrega' %}
+                                            <span class="badge bg-success">{{ pedido.get_estado_display }}</span>
+                                        {% elif pedido.estado == 'entregado' %}
+                                            <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
+                                        {% elif pedido.estado == 'rechazado' %}
+                                            <span class="badge bg-danger">{{ pedido.get_estado_display }}</span>
+                                        {% elif pedido.estado == 'cancelado' %}
+                                            <span class="badge bg-dark">{{ pedido.get_estado_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pedido.fecha|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if pedido.metodo_pago == 'transferencia' and not pedido.pago_confirmado and pedido.estado == 'pendiente' %}
+                                            {% if pedido.comprobante_transferencia %}
+                                                <span class="text-muted">Esperando confirmación</span>
+                                            {% else %}
+                                                <a href="{% url 'subir_comprobante' pedido.id %}" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-upload"></i> Subir Comprobante
+                                                </a>
+                                            {% endif %}
+                                        {% elif pedido.estado == 'listo_entrega' %}
+                                            <span class="badge bg-success">¡Listo para retirar!</span>
+                                        {% elif pedido.estado == 'entregado' %}
+                                            <span class="badge bg-secondary">Entregado</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-cart-x fs-1 text-muted"></i>
+                        <h5 class="text-muted mt-3">No tienes compras registradas</h5>
+                        <p class="text-muted">¡Comienza a comprar en nuestro catálogo!</p>
+                        <a href="{% url 'catalogo_productos' %}" class="btn btn-primary">
+                            <i class="bi bi-eye"></i> Ver Catálogo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos Recomendados -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-star"></i> Productos Recomendados para Ti</h5>
+                </div>
+                <div class="card-body">
+                    {% if productos_recomendados %}
+                    <div class="row">
+                        {% for producto in productos_recomendados %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                {% if producto.imagen %}
+                                <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <i class="bi bi-image text-muted fs-1"></i>
+                                </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ producto.nombre }}</h6>
+                                    <p class="card-text text-muted">{{ producto.categoria }}</p>
+                                    <p class="card-text"><strong>${{ producto.precio|floatformat:0 }}</strong></p>
+                                    <div class="d-grid">
+                                        <a href="{% url 'detalle_producto' producto.id %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye"></i> Ver Detalles
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-box fs-1 text-muted"></i>
+                        <h5 class="text-muted mt-3">No hay productos recomendados disponibles</h5>
+                        <p class="text-muted">Explora nuestro catálogo completo</p>
+                        <a href="{% url 'catalogo_productos' %}" class="btn btn-primary">
+                            <i class="bi bi-eye"></i> Ver Catálogo Completo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen de Actividad -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Total Compras</h5>
+                            <h2 class="mb-0">{{ historial_compras.count }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-cart-check fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Pedidos Entregados</h5>
+                            <h2 class="mb-0">{{ historial_compras|length }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Productos Recomendados</h5>
+                            <h2 class="mb-0">{{ productos_recomendados.count }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-star fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

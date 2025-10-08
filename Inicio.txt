@@ -1,0 +1,3 @@
+pip install mercadopago
+
+python manage.py runserver

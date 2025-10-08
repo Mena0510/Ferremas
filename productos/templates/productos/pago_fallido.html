@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-danger">¡Pago rechazado!</h2>
+    <p>Algo salió mal al intentar procesar tu pago. Puedes intentarlo nuevamente.</p>
+    <a href="{% url 'ver_carrito' %}" class="btn btn-warning mt-3">Volver al carrito</a>
+</div>
+{% endblock %}

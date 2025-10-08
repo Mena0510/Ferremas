@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>FERREMAS - {% block title %}Inicio{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+      color: #333333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    main {
+      flex: 1;
+      margin-top: 80px;
+    }
+
+    .login-register-container {
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+      max-width: 400px;
+      margin: auto;
+    }
+
+    .navbar {
+      background-color: #f4f4f4 !important;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .navbar-brand,
+    .nav-link,
+    .btn,
+    .page-link {
+      font-weight: 600;
+    }
+
+    .navbar .nav-link {
+      color: #f57c00 !important;
+    }
+
+    .navbar .nav-link:hover {
+      color: #d95f00 !important;
+      text-decoration: underline;
+    }
+
+    .btn-primary {
+      background-color: #f57c00;
+      border-color: #f57c00;
+    }
+
+    .btn-primary:hover {
+      background-color: #e06600;
+      border-color: #e06600;
+    }
+
+    footer {
+      background-color: #333333;
+      color: #ffffff;
+      padding: 20px 0;
+      margin-top: 50px;
+      position: relative;
+    }
+
+    footer small {
+      display: block;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 9999;
+    }
+
+    .toast-custom {
+        background-color: #e6f4ea;
+        color: #1e4620;
+        border-left: 5px solid #28a745;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .toast .btn-close {
+        filter: invert(0.5);
+    }
+
+    /* ✅ Estilo para imágenes de productos */
+    .product-img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- 🔝 NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="{% url 'catalogo_productos' %}">
+      <strong>FERREMAS</strong>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="menu">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'home' %}">Inicio</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'catalogo_productos' %}">Catálogo</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'lista_productos' %}">Importaciones</a>
+            </li>
+        </ul>
+        <div class="d-flex align-items-center">
+          {% if user.is_authenticated %}
+            <!-- Botones específicos según el perfil -->
+            {% if user.is_superuser %}
+              <!-- Botón de Admin -->
+              <a href="{% url 'panel_admin' %}" class="btn btn-outline-warning me-2">
+                <i class="bi bi-tools"></i> Admin
+              </a>
+            {% elif user.perfil.tipo_usuario == 'vendedor' %}
+              <!-- Botón de Vendedor -->
+              <a href="{% url 'vendedor_dashboard' %}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-person-check"></i> Vendedor
+              </a>
+            {% elif user.perfil.tipo_usuario == 'bodeguero' %}
+              <!-- Botón de Bodeguero -->
+              <a href="{% url 'bodeguero_dashboard' %}" class="btn btn-outline-info me-2">
+                <i class="bi bi-boxes"></i> Inventario
+              </a>
+            {% elif user.perfil.tipo_usuario == 'contador' %}
+              <!-- Botón de Contador -->
+              <a href="{% url 'contador_dashboard' %}" class="btn btn-outline-success me-2">
+                <i class="bi bi-calculator"></i> Finanzas
+              </a>
+            {% elif user.perfil.tipo_usuario == 'cliente' %}
+              <!-- Botón de Cliente -->
+              <a href="{% url 'client_dashboard' %}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-person-circle"></i> Cuenta
+              </a>
+              <a href="{% url 'crear_reclamo' %}" class="btn btn-outline-danger me-2">
+                <i class="bi bi-exclamation-circle"></i> Reclamo
+              </a>
+            {% endif %}
+            
+            <!-- Botón de logout -->
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger me-2">
+              <i class="bi bi-box-arrow-right"></i> Salir
+            </a>
+          {% else %}
+            <!-- Botón de login -->
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary me-2">
+              <i class="bi bi-person-circle"></i> Iniciar sesión
+            </a>
+          {% endif %}
+
+          <!-- Icono del carrito -->
+          <a href="{% url 'ver_carrito' %}" class="btn btn-outline-dark position-relative">
+              <i class="bi bi-cart-fill"></i>
+              {% if carrito_total > 0 %}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ carrito_total }}
+              </span>
+              {% endif %}
+          </a>
+        </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  {% block content %}
+  {% endblock %}
+</main>
+
+<footer class="text-center text-muted">
+  <div class="container">
+    <p class="mb-1">FERREMAS &copy; {{ year|default:"2025" }}</p>
+    <small>Soluciones en ferretería industrial, herramientas y materiales.</small><br>
+    <small>Contacto: contacto@ferremas.cl | +56 9 1234 5678</small>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toasts = document.querySelectorAll('.toast');
+      toasts.forEach(t => {
+        const toast = new bootstrap.Toast(t, { delay: 4000 });
+        toast.show();
+      });
+    });
+</script>
+<a href="https://wa.me/56912345678" target="_blank" class="btn-wsp" title="¿Tienes dudas? Escríbenos">
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" class="bi bi-whatsapp" viewBox="0 0 16 16">
+    <path d="M13.601 2.326A7.876 7.876 0 0 0 8.013.001C3.582.001.005 3.574.004 7.996a7.945 7.945 0 0 0 1.16 4.16L.057 16l3.944-1.07a7.94 7.94 0 0 0 4.014 1.057h.003c4.43 0 8.006-3.573 8.006-7.995a7.93 7.93 0 0 0-2.423-5.666zM8.018 14.5a6.467 6.467 0 0 1-3.3-.898l-.236-.14-2.34.635.626-2.283-.153-.234a6.457 6.457 0 0 1-.996-3.44c0-3.572 2.916-6.478 6.497-6.478a6.457 6.457 0 0 1 4.592 1.899 6.448 6.448 0 0 1 1.9 4.58c0 3.582-2.906 6.48-6.49 6.48zm3.575-4.856c-.196-.098-1.158-.57-1.337-.634-.18-.065-.312-.098-.443.098s-.507.634-.622.766c-.114.13-.23.146-.425.049-.196-.098-.827-.305-1.576-.97-.583-.519-.976-1.16-1.09-1.356-.113-.195-.012-.3.085-.398.088-.087.196-.229.294-.344.098-.114.13-.196.196-.326.065-.13.033-.245-.016-.344-.05-.098-.443-1.07-.606-1.466-.159-.38-.32-.328-.443-.334l-.377-.008a.828.828 0 0 0-.598.278c-.196.213-.77.752-.77 1.83s.79 2.126.9 2.273c.114.146 1.552 2.368 3.768 3.32.527.228.938.364 1.26.466.53.168 1.012.145 1.393.088.425-.064 1.158-.472 1.322-.928.164-.455.164-.844.114-.928-.049-.084-.18-.13-.377-.229z"/>
+  </svg>
+</a>
+
+<style>
+  .btn-wsp {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 80px;
+    right: 20px;
+    z-index: 999;
+    background-color: #25D366; /* Verde WhatsApp */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+
+  .btn-wsp:hover {
+    transform: scale(1.1);
+    background-color: #20ba5a;
+  }
+</style>
+</body>
+</html>
